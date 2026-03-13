@@ -1,0 +1,62 @@
+---
+title: 特别鸣谢
+
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import vita from '../../assets/vita.jpg';
+import qlqz from '../../assets/qlqz.jpg';
+import yae from '../../assets/yae.jpg';
+import iceblue from '../../assets/iceblue.jpg';
+
+<CardGrid>
+    <Image
+        src={ vita }
+        alt="千蚀vita"
+        layout='constrained'
+        width={ 80 }
+        height={ 80 }
+        />
+    <LinkCard
+    title="千蚀vita"
+    href="https://space.bilibili.com/3546729020394298/"
+    description="「循此逆旅，以达星辰」目标是成为宇宙级偶像！"
+    />
+    <Image
+        src={ qlqz }
+        alt="青岚千柊"
+        layout='constrained'
+        width={ 80 }
+        height={ 80 }
+        />
+    <LinkCard
+    title="青岚千柊"
+    href="https://space.bilibili.com/15104516/"
+    description="《山海经》 | 青耕我终于来到你身边啦！"
+    />
+    <Image
+        src={ yae }
+        alt="天苍八重"
+        layout='constrained'
+        width={ 80 }
+        height={ 80 }
+        />
+    <LinkCard
+    title="天苍八重"
+    href="https://space.bilibili.com/4015420/"
+    description="所谓美好 无非是驱逐自身阴霾的过程"
+    />
+    <Image
+        src={ iceblue }
+        alt="冰蓝IceBlue"
+        layout='constrained'
+        width={ 80 }
+        height={ 80 }
+        />
+    <LinkCard
+    title="冰蓝IceBlue"
+    href="https://space.bilibili.com/11236317/"
+    description="岂可尽如人意，但求无愧于心"
+    />
+</CardGrid>

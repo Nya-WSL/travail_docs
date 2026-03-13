@@ -4,22 +4,38 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	image: {
+		responsiveStyles: true
+	},
 	integrations: [
 		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			title: 'B站加班姬',
+			logo: {
+				src: './src/assets/logo.svg',
+			},
+			locales: {
+				root: {
+					label: '简体中文',
+					lang: 'zh-CN',
+				},
+			},
+			social: [
+				{ icon: 'external', label: 'B站', href: 'https://play-live.bilibili.com/details/1765765916387' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Nya-WSL/bili_travail' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Nya-WSL/travail_docs' }
+			],
 			sidebar: [
 				{
-					label: 'Guides',
-					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
-					],
+					label: '指南',
+					autogenerate: { directory: 'guides' }
 				},
 				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
-				},
+					label: '关于',
+					items: [
+						{ label: '联系我们', slug: 'contact' },
+						{ label: '特别鸣谢', slug: 'thanks' }
+					]
+				}
 			],
 		}),
 	],
