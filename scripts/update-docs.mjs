@@ -130,9 +130,6 @@ function extractConfigItems(configSrc) {
     let m;
     while ((m = addRe.exec(configSrc)) !== null) {
       const key = m[1];
-      // 查找紧随其后的 .comment("...")
-      const rest = configSrc.slice(m.index, m.index + 600);
-      const cmt = rest.match(/\.comment\(\s*["']([^"']*)["']\s*\)/);
       // 默认值：去掉 item() 包装，保留字面量；若是变量引用则解析其值
       let defaultRaw = m[2].trim();
       const itemWrap = defaultRaw.match(/^item\((.+)\)$/);
@@ -148,10 +145,35 @@ function extractConfigItems(configSrc) {
           defaultRaw = val;
         }
       }
+      // 查找注释（按匹配度从精确到回退）：
+      // 1) raw_append 变量形式：_var.comment("...")，避免把下一个配置项的注释误配给当前项
+      // 2) add 表键形式：table["key"].comment("...")
+      // 3) 回退：紧随其后的 .comment("...")
+      let comment = '';
+      const valueExpr = m[2].trim();
+      if (/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(valueExpr)) {
+        const varCommentRe = new RegExp(
+          `\\b${valueExpr}\\s*\\.comment\\(\\s*["']([^"']*)["']\\s*\\)`
+        );
+        const cm = configSrc.match(varCommentRe);
+        if (cm) comment = cm[1];
+      }
+      if (!comment) {
+        const tblCommentRe = new RegExp(
+          `${tableName}\\s*\\[\\s*["']${key}["']\\s*\\]\\s*\\.comment\\(\\s*["']([^"']*)["']\\s*\\)`
+        );
+        const cm = configSrc.match(tblCommentRe);
+        if (cm) comment = cm[1];
+      }
+      if (!comment) {
+        const rest = configSrc.slice(m.index, m.index + 600);
+        const cmt = rest.match(/\.comment\(\s*["']([^"']*)["']\s*\)/);
+        if (cmt) comment = cmt[1];
+      }
       items.push({
         table: tableName,
         key,
-        comment: cmt ? cmt[1] : '',
+        comment,
         defaultRaw,
       });
     }
@@ -232,10 +254,10 @@ function renderConfig(items) {
     lines.push('| 配置项 | 默认值 | 说明 |');
     lines.push('| ------ | ------ | ---- |');
     for (const item of groups.get(table)) {
-      const extra = CONFIG_EXTRA_DESCRIPTIONS[item.key] || '';
-      // 源码注释与补充说明可能重复，去重拼接
-      const descParts = [item.comment, extra].filter(Boolean);
-      const desc = [...new Set(descParts)].join('；') || '—';
+      // 优先使用描述库中维护的补充说明（更详细、更准确，可覆盖上游注释中的拼写错误）；
+      // 无补充说明时回退到上游源码注释
+      const extra = CONFIG_EXTRA_DESCRIPTIONS[item.key];
+      const desc = extra || item.comment || '—';
       lines.push(`| \`${item.key}\` | \`${item.defaultRaw}\` | ${desc} |`);
     }
     lines.push('');

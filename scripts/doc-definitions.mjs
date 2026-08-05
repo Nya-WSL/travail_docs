@@ -155,16 +155,10 @@ export const CONFIG_EXTRA_DESCRIPTIONS = {
   ACCESS_KEY_ID: '哔哩哔哩直播开放平台 access_key_id（开发者申请）',
   ACCESS_KEY_SECRET: '哔哩哔哩直播开放平台 access_key_secret（开发者申请）',
   APP_ID: '哔哩哔哩直播开放平台项目 ID',
-  remote_text: 'about 页面对话框内容是否从服务器获取',
   show_capture_gift_list: '是否在 OBS 浏览器源显示收到礼物列表',
   show_capture_rank_list: '是否在 OBS 浏览器源显示排行榜',
   short_list: '礼物列表简洁模式（存在 bug，当前版本禁用）',
-  borderless_cd: '倒计时是否无边框显示',
-  exit_timer: '倒计时结束后是否退出程序',
-  check_update: '是否启用自动检查更新',
-  check_sha256: '是否启用更新包 SHA256 校验',
   short_time: '简洁模式滚动间隔（秒）',
-  capture_gift_list_number: '收到礼物列表显示数量',
   exit_time: '倒计时结束后退出程序的等待时间（秒）',
 };
 
