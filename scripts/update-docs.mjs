@@ -427,6 +427,23 @@ function main() {
     `控件说明已写入（按钮 ${buttonLabels.length}，开关 ${switchLabels.length}，玩法 ${playLabels.length}，颜色 ${colorLabels.length}）`
   );
 
+  // 输出本次生成的变更摘要（对比已提交版本），便于 CI 日志观察
+  const changedDocs = [];
+  for (const [name, file] of Object.entries(DOC_TARGETS)) {
+    let changed = false;
+    try {
+      changed = sh(`git -C "${REPO_ROOT}" diff --quiet HEAD -- "${file}"`).trim() !== '';
+    } catch {
+      changed = true; // 文件不存在于 HEAD（新增）
+    }
+    if (changed) changedDocs.push(name);
+  }
+  log(
+    changedDocs.length
+      ? `本次生成变更文档：${changedDocs.join(', ')}`
+      : '本次生成无变更（与已提交版本一致）'
+  );
+
   rmSync(TEMP_DIR, { recursive: true, force: true });
 
   commitAndPush();
