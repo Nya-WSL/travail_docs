@@ -1,10 +1,18 @@
-# 将 CNB 仓库变更自动同步至 GitHub 原仓库
-# 使用 CNB 官方 git-sync 插件（tencentcom/git-sync）
+# ============================================================
+# CNB 流水线配置
 #
-# 前置条件：需要 GitHub 访问令牌（对目标仓库具备写权限）
-# 已通过 CNB 密钥仓库 Nya-WSL/secret_travail_docs 的 env.yml 提供：
-#   GIT_USERNAME: GitHub 用户名
-#   GIT_PASSWORD: GitHub PAT（需 repo 写权限）
+# 1. sync to github      ：CNB master 变更自动同步至 GitHub 原仓库
+#                          （tencentcom/git-sync 插件，push 模式）
+# 2. sync docs (crontab) ：每 30 分钟轮询上游 bili_travail(open_live)，
+#                          自动生成文档并推送回 CNB master（再由 #1 同步到 GitHub）
+# 3. sync docs (api)     ：GitHub push 时通过 CNB OpenAPI 触发，实时同步
+#
+# 前置条件：
+#   - 密钥仓库 Nya-WSL/secret_travail_docs 的 env.yml 提供：
+#       GIT_USERNAME: GitHub 用户名
+#       GIT_PASSWORD: GitHub PAT（对 bili_travail 仓库具备读权限即可）
+#   - 生成脚本推送回 CNB 时使用流水线内置 CNB_TOKEN（可信事件写权限）
+# ============================================================
 master:
   push:
     - name: sync to github
@@ -19,3 +27,29 @@ master:
             username: "${GIT_USERNAME}"
             password: "${GIT_PASSWORD}"
             branch: master
+
+  # 兜底轮询：每 30 分钟检查上游 open_live 分支是否有新版本，有则生成文档并推送
+  "crontab: */30 * * * *":
+    - name: sync docs from upstream
+      docker:
+        image: node:20
+      env:
+        ALLOW_PUSH: "1"
+        UPSTREAM_REPO: https://github.com/Nya-WSL/bili_travail.git
+        UPSTREAM_BRANCH: open_live
+      stages:
+        - name: generate docs
+          script: node scripts/update-docs.mjs
+
+  # GitHub push 实时触发入口（模板见 docs/templates/github-sync-docs.yml）
+  api_trigger_sync_docs:
+    - name: sync docs from upstream (webhook)
+      docker:
+        image: node:20
+      env:
+        ALLOW_PUSH: "1"
+        UPSTREAM_REPO: https://github.com/Nya-WSL/bili_travail.git
+        UPSTREAM_BRANCH: open_live
+      stages:
+        - name: generate docs
+          script: node scripts/update-docs.mjs

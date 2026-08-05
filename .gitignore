@@ -18,5 +18,8 @@ pnpm-debug.log*
 .env
 .env.production
 
+# doc sync temp dir
+.tmp-upstream/
+
 # macOS-specific files
 .DS_Store
