@@ -5,7 +5,7 @@ sidebar:
 ---
 
 > 本文档由脚本自动生成，数据来源于 [bili_travail/changelog.json](https://github.com/Nya-WSL/bili_travail/blob/open_live/changelog.json)。
-> 若与上游不一致，请以 [上游更新日志](https://github.com/Nya-WSL/bili_travail/blob/open_live/changelog.json) 为准。
+> 若与上游不一致，请以上游源码为准。
 
 ## 2.40.073119
 

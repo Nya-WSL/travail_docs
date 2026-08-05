@@ -4,12 +4,21 @@ B站加班姬（[bili_travail](https://github.com/Nya-WSL/bili_travail)）使用
 
 ## 文档自动同步
 
-本仓库的更新日志 / 版本信息由脚本自动从上游仓库生成，无需手工维护：
+本仓库的文档由脚本自动从上游仓库 [bili_travail](https://github.com/Nya-WSL/bili_travail)（`open_live` 分支）生成，无需手工维护：
 
-| 内容 | 上游来源 | 生成目标 |
+| 文档 | 上游来源 | 生成说明 |
 |------|---------|---------|
-| 更新日志 | [bili_travail/changelog.json](https://github.com/Nya-WSL/bili_travail/blob/open_live/changelog.json) | `src/content/docs/guides/changelog.md` |
-| 版本信息 | [bili_travail/version.json](https://github.com/Nya-WSL/bili_travail/blob/open_live/version.json) | `src/content/docs/guides/version.md` |
+| 更新日志 | `changelog.json` | 按版本列出更新内容 |
+| 版本信息 | `version.json` | 当前版本号 |
+| 配置文件 | `libs/config.py` | 配置项、默认值、说明 |
+| 按钮 | `main.py`（`ui.button`） | 控制面板与弹窗按钮 |
+| 开关 | `main.py`（`ui.switch`） | 控制面板开关 |
+| 玩法 | `main.py`（`ui.toggle`） | 礼物玩法类型 |
+
+> 生成规则：解析上游源码中的 `ui.button` / `ui.switch` / `ui.color_input` / `ui.toggle` 与
+> `libs/config.py` 配置定义，结合 `scripts/doc-definitions.mjs` 中的功能描述映射，
+> 自动生成对应 Markdown 文档；上游新增控件时脚本会自动识别并追加，
+> 若缺少描述会标注「待补充说明」，提示维护者更新描述库。
 
 ### 触发方式
 
@@ -53,7 +62,8 @@ npm run build      # 构建生产站点到 ./dist/
 .
 ├── .cnb.yml                      # CNB 流水线（git-sync + 文档自动同步）
 ├── scripts/
-│   └── update-docs.mjs           # 文档生成脚本
+│   ├── update-docs.mjs           # 文档生成脚本（拉取上游源码并生成文档）
+│   └── doc-definitions.mjs       # 控件功能描述库（按钮/开关/玩法/配置说明）
 ├── docs/templates/
 │   └── github-sync-docs.yml      # GitHub Actions 实时触发模板
 └── src/content/docs/

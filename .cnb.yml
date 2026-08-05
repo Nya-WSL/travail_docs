@@ -1,11 +1,19 @@
 # ============================================================
 # CNB 流水线配置
 #
-# 1. sync to github      ：CNB master 变更自动同步至 GitHub 原仓库
-#                          （tencentcom/git-sync 插件，push 模式）
-# 2. sync docs (crontab) ：每 30 分钟轮询上游 bili_travail(open_live)，
-#                          自动生成文档并推送回 CNB master（再由 #1 同步到 GitHub）
-# 3. sync docs (api)     ：GitHub push 时通过 CNB OpenAPI 触发，实时同步
+# 1. sync to github          ：CNB master 变更自动同步至 GitHub 原仓库
+#                              （tencentcom/git-sync 插件，push 模式）
+# 2. sync docs (crontab)     ：每 30 分钟轮询上游 bili_travail(open_live)，
+#                              拉取源码并根据修改内容自动生成新文档并推送回 CNB master
+#                              （再由 #1 同步到 GitHub travail_docs）
+# 3. sync docs (api_trigger) ：上游 open_live 收到 push 时通过 CNB OpenAPI 实时触发，
+#                              拉取源码 -> 生成新文档 -> 推送回 CNB master -> 同步到 GitHub
+#
+# 文档生成内容（scripts/update-docs.mjs）：
+#   - 更新日志   changelog.md（changelog.json）
+#   - 版本信息   version.md（version.json）
+#   - 配置文件   config.md（libs/config.py）
+#   - 按钮/开关/玩法/颜色 说明（main.py 中 ui.button / ui.switch / ui.color_input / ui.toggle）
 #
 # 前置条件：
 #   - 密钥仓库 Nya-WSL/secret_travail_docs 的 env.yml 提供：
@@ -41,7 +49,9 @@ master:
         - name: generate docs
           script: node scripts/update-docs.mjs
 
-  # GitHub push 实时触发入口（模板见 docs/templates/github-sync-docs.yml）
+# GitHub push 实时触发入口（模板见 docs/templates/github-sync-docs.yml）
+# 放在 $ 兜底分支：api_trigger 事件走默认分支（master）最新代码执行
+$:
   api_trigger_sync_docs:
     - name: sync docs from upstream (webhook)
       docker:

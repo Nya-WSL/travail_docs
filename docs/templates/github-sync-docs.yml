@@ -1,6 +1,12 @@
 # 在 bili_travail 仓库（open_live 分支）收到 push 时，通过 CNB OpenAPI
 # 触发 travail_docs 的 api_trigger_sync_docs 流水线，实时同步生成文档。
 #
+# 同步内容（由 scripts/update-docs.mjs 根据上游源码自动生成）：
+#   - 更新日志（changelog.json）
+#   - 版本信息（version.json）
+#   - 配置文件说明（libs/config.py）
+#   - 按钮 / 开关 / 玩法 / 颜色说明（main.py）
+#
 # 使用方法：
 #   1. 在 CNB 创建一个访问令牌（权限至少包含 repo-cnb-trigger）
 #   2. 在本仓库 Settings -> Secrets and variables -> Actions 中添加：
