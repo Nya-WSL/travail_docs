@@ -1,0 +1,41 @@
+# 在 bili_travail 仓库（open_live 分支）收到 push 时，通过 CNB OpenAPI
+# 触发 travail_docs 的 api_trigger_sync_docs 流水线，实时同步生成文档。
+#
+# 同步内容（由 scripts/update-docs.mjs 根据上游源码自动生成）：
+#   - 更新日志（changelog.json）
+#   - 版本信息（version.json）
+#   - 配置文件说明（libs/config.py）
+#   - 按钮 / 开关 / 玩法 / 颜色说明（main.py）
+#
+# 使用方法：
+#   1. 在 CNB 创建一个访问令牌（权限至少包含 repo-cnb-trigger）
+#   2. 在本仓库 Settings -> Secrets and variables -> Actions 中添加：
+#        CNB_TOKEN: <上一步创建的访问令牌>
+#      （可选）CNB_API_BASE: 默认 https://api.cnb.cool，私有化环境请改为实际地址
+#   3. 将本文件放到 bili_travail 仓库的 .github/workflows/ 目录下
+#      （本仓库为公开样例，实际使用时请提交到 https://github.com/Nya-WSL/bili_travail）
+#
+# 说明：
+#   - 即使不配置此 Workflow，travail_docs 也会通过 crontab 每 30 分钟轮询上游，
+#     本 Workflow 用于把同步延迟从「最多 30 分钟」缩短到「秒级」。
+
+name: Sync docs to travail_docs
+
+on:
+  push:
+    branches: [open_live]
+
+jobs:
+  trigger-docs-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger CNB api_trigger_sync_docs
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          CNB_API_BASE: ${{ secrets.CNB_API_BASE || 'https://api.cnb.cool' }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${CNB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"event":"api_trigger_sync_docs","branch":"master","title":"docs: 上游 open_live push 实时同步"}' \
+            "${CNB_API_BASE}/Nya-WSL/travail_docs/-/build/start"
