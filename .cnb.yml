@@ -2,15 +2,14 @@
 # 使用 CNB 官方 git-sync 插件（tencentcom/git-sync）
 #
 # 前置条件：需要 GitHub 访问令牌（对目标仓库具备写权限）
-# 强烈建议将 GIT_USERNAME / GIT_PASSWORD 存入 CNB 密钥仓库，通过 imports 引用，
-# 参考文档：https://docs.cnb.cool/zh/repo/secret.md
-#
-# 示例（在密钥仓库 env.yml 中配置 GIT_USERNAME 与 GIT_PASSWORD 后启用）：
-#   imports:
-#     - https://cnb.cool/Nya-WSL/<secret-repo>/-/blob/main/env.yml
+# 已通过 CNB 密钥仓库 Nya-WSL/secret_travail_docs 的 env.yml 提供：
+#   GIT_USERNAME: GitHub 用户名
+#   GIT_PASSWORD: GitHub PAT（需 repo 写权限）
 master:
   push:
     - name: sync to github
+      imports:
+        - https://cnb.cool/Nya-WSL/secret_travail_docs/-/blob/main/env.yml
       stages:
         - name: sync to github
           image: tencentcom/git-sync
