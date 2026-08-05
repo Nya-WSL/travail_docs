@@ -32,6 +32,7 @@ import {
   BUTTON_ORDER,
   SWITCH_DESCRIPTIONS,
   SWITCH_ORDER,
+  SWITCH_NOTES,
   PLAY_DESCRIPTIONS,
   PLAY_ORDER,
   PLAY_NOTES,
@@ -306,6 +307,8 @@ function renderSwitch(switchLabels) {
     ),
   ];
   lines.push(renderControls(switchLabels, SWITCH_DESCRIPTIONS, SWITCH_ORDER, '开关'));
+  lines.push(SWITCH_NOTES);
+  lines.push('');
   return lines.join('\n');
 }
 
