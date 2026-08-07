@@ -39,7 +39,8 @@ sidebar:
 | ------ | ------ | ---- |
 | `time_color` | `"#9BA89A"` | 倒计时颜色 |
 | `btn_color` | `"#7A8FA0"` | 按钮颜色 |
-| `text_color` | `"#4A4A4A"` | 文字颜色 |
+| `main_text_color` | `"#000000"` | 主界面字体颜色 |
+| `text_color` | `"#4A4A4A"` | 子页面字体颜色 |
 | `bg_color` | `"#FCFCFA"` | 背景颜色 |
 
 ## bool
