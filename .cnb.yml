@@ -12,8 +12,9 @@
 # 文档生成内容（scripts/update-docs.mjs）：
 #   - 更新日志   changelog.md（changelog.json）
 #   - 版本信息   version.md（version.json）
-#   - 配置文件   config.md（libs/config.py）
-#   - 按钮/开关/玩法/颜色 说明（main.py 中 ui.button / ui.switch / ui.color_input / ui.toggle）
+#   - 主界面     main.md（main.py 倒计时控制/悬浮按钮）
+#   - 各标签页   account/gift/display/appearance/statistics/program/simulation.md
+#                （main.py + libs/config.py，按控制面板标签页集中展示配置项/开关/按钮/颜色/玩法）
 #
 # 前置条件：
 #   - 密钥仓库 Nya-WSL/secret_travail_docs 的 env.yml 提供：

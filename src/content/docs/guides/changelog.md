@@ -1,7 +1,7 @@
 ---
 title: 更新日志
 sidebar:
-  order: 4
+  order: 12
 ---
 
 > 本文档由脚本自动生成，数据来源于 [bili_travail/changelog.json](https://github.com/Nya-WSL/bili_travail/blob/open_live/changelog.json)。
