@@ -163,6 +163,61 @@ export const CONFIG_EXTRA_DESCRIPTIONS = {
 };
 
 // ---------------------------------------------------------------------------
+// 配置项 -> 控制面板标签页 分组（按 main.py 中 ui.tabs 的标签页顺序）
+// 每个标签页列出其中可配置项；不含配置项的标签页（如统计相关/模拟测试）不渲染
+// ---------------------------------------------------------------------------
+export const CONFIG_TABS = [
+  {
+    label: '账号设置',
+    items: ['room_id', 'host', 'port', 'auth_code', 'exit_timer', 'exit_time'],
+  },
+  {
+    label: '礼物设置',
+    items: ['short_list', 'short_time'],
+  },
+  {
+    label: '显示设置',
+    items: [
+      'show_capture_gift_list',
+      'show_capture_rank_list',
+      'borderless_cd',
+      'capture_gift_list_number',
+    ],
+  },
+  {
+    label: '外观设置',
+    items: [
+      'background_image',
+      'time_color',
+      'btn_color',
+      'bg_color',
+      'main_text_color',
+      'text_color',
+    ],
+  },
+  {
+    label: '统计相关',
+    items: [],
+  },
+  {
+    label: '程序设置',
+    items: [
+      'server',
+      'ACCESS_KEY_ID',
+      'ACCESS_KEY_SECRET',
+      'APP_ID',
+      'remote_text',
+      'check_update',
+      'check_sha256',
+    ],
+  },
+  {
+    label: '模拟测试',
+    items: [],
+  },
+];
+
+// ---------------------------------------------------------------------------
 // 各文档的头部模板
 // ---------------------------------------------------------------------------
 export function frontmatter(title, order, sourceUrl, sourceLabel) {

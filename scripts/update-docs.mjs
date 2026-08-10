@@ -37,6 +37,7 @@ import {
   PLAY_ORDER,
   PLAY_NOTES,
   CONFIG_EXTRA_DESCRIPTIONS,
+  CONFIG_TABS,
   frontmatter,
 } from './doc-definitions.mjs';
 
@@ -224,7 +225,21 @@ function renderVersion(version) {
   ].join('\n');
 }
 
-/** 配置文件说明（由 libs/config.py 自动生成） */
+/**
+ * 渲染单个配置项表格行
+ */
+function renderConfigRow(item) {
+  const extra = CONFIG_EXTRA_DESCRIPTIONS[item.key];
+  const desc = extra || item.comment || '—';
+  return `| \`${item.key}\` | \`${item.defaultRaw}\` | ${desc} |`;
+}
+
+/**
+ * 配置文件说明（由 libs/config.py 自动生成，按控制面板标签页分类）
+ *
+ * 配置项依据 scripts/doc-definitions.mjs 中的 CONFIG_TABS 分组到对应标签页下；
+ * 未映射到任何标签页的配置项会被归入末尾的「其他配置」以防遗漏。
+ */
 function renderConfig(items) {
   const lines = [
     frontmatter(
@@ -235,33 +250,47 @@ function renderConfig(items) {
     ),
     '配置文件 `config.toml` 位于程序目录下，首次运行自动生成，缺省项会在启动时自动补齐。',
     '',
+    '以下配置项按控制面板的标签页分组展示。',
+    '',
   ];
 
-  // 按表分组，保留源码顺序
-  const tableOrder = [];
-  const groups = new Map();
+  // 按标签页分组
+  const tabGroups = CONFIG_TABS.map((tab) => ({ label: tab.label, items: [] }));
+  const leftovers = [];
   for (const item of items) {
-    if (!groups.has(item.table)) {
-      groups.set(item.table, []);
-      tableOrder.push(item.table);
+    const tab = CONFIG_TABS.find((t) => t.items.includes(item.key));
+    if (tab) {
+      const group = tabGroups.find((g) => g.label === tab.label);
+      group.items.push(item);
+    } else {
+      leftovers.push(item);
     }
-    groups.get(item.table).push(item);
   }
 
-  for (const table of tableOrder) {
-    lines.push(`## ${table}`);
+  for (const group of tabGroups) {
+    if (!group.items.length) continue; // 无配置项的标签页（统计相关/模拟测试）不渲染
+    lines.push(`## ${group.label}`);
     lines.push('');
     lines.push('| 配置项 | 默认值 | 说明 |');
     lines.push('| ------ | ------ | ---- |');
-    for (const item of groups.get(table)) {
-      // 优先使用描述库中维护的补充说明（更详细、更准确，可覆盖上游注释中的拼写错误）；
-      // 无补充说明时回退到上游源码注释
-      const extra = CONFIG_EXTRA_DESCRIPTIONS[item.key];
-      const desc = extra || item.comment || '—';
-      lines.push(`| \`${item.key}\` | \`${item.defaultRaw}\` | ${desc} |`);
+    for (const item of group.items) {
+      lines.push(renderConfigRow(item));
     }
     lines.push('');
   }
+
+  // 兜底：未映射的配置项
+  if (leftovers.length) {
+    lines.push('## 其他配置');
+    lines.push('');
+    lines.push('| 配置项 | 默认值 | 说明 |');
+    lines.push('| ------ | ------ | ---- |');
+    for (const item of leftovers) {
+      lines.push(renderConfigRow(item));
+    }
+    lines.push('');
+  }
+
   return lines.join('\n');
 }
 
