@@ -2,13 +2,14 @@
 /**
  * 从上游仓库 bili_travail（open_live 分支）拉取源码，根据修改内容自动生成本站文档。
  *
+ * 文档按控制面板的「标签页」组织：每个标签页生成一个独立页面，
+ * 将配置项、开关、按钮、颜色、玩法集中在该标签页下展示，与程序界面保持一致。
+ *
  * 生成内容：
  *   1. changelog.md   — 更新日志（changelog.json）
  *   2. version.md     — 版本信息（version.json）
- *   3. config.md      — 配置文件说明（libs/config.py）
- *   4. button.md      — 控制面板按钮说明（main.py 中 ui.button）
- *   5. switch.md      — 控制面板开关说明（main.py 中 ui.switch）
- *   6. play.md        — 礼物玩法说明（main.py 中礼物设置玩法）
+ *   3. main.md        — 主界面（倒计时控制 + 悬浮按钮）
+ *   4. {tab}.md       — 控制面板各标签页（账号/礼物/显示/外观/统计/程序/模拟）
  *
  * 用法：
  *   node scripts/update-docs.mjs [--repo <url>] [--branch <name>]
@@ -32,12 +33,10 @@ import {
   BUTTON_ORDER,
   SWITCH_DESCRIPTIONS,
   SWITCH_ORDER,
-  SWITCH_NOTES,
   PLAY_DESCRIPTIONS,
-  PLAY_ORDER,
-  PLAY_NOTES,
   CONFIG_EXTRA_DESCRIPTIONS,
-  CONFIG_TABS,
+  MAIN_PAGE,
+  CONTROL_TABS,
   frontmatter,
 } from './doc-definitions.mjs';
 
@@ -53,10 +52,8 @@ const DOCS_DIR = join(REPO_ROOT, 'src/content/docs/guides');
 const DOC_TARGETS = {
   changelog: join(DOCS_DIR, 'changelog.md'),
   version: join(DOCS_DIR, 'version.md'),
-  config: join(DOCS_DIR, 'config.md'),
-  button: join(DOCS_DIR, 'usage/button.md'),
-  switch: join(DOCS_DIR, 'usage/switch.md'),
-  play: join(DOCS_DIR, 'usage/play.md'),
+  main: join(DOCS_DIR, 'main.md'),
+  ...Object.fromEntries(CONTROL_TABS.map((t) => [t.filename.replace('.md', ''), join(DOCS_DIR, t.filename)])),
 };
 
 const TEMP_DIR = join(REPO_ROOT, '.tmp-upstream');
@@ -191,7 +188,7 @@ function renderChangelog(data) {
   const lines = [
     frontmatter(
       '更新日志',
-      4,
+      12,
       `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/changelog.json`,
       `bili_travail/changelog.json`
     ),
@@ -216,7 +213,7 @@ function renderVersion(version) {
   return [
     frontmatter(
       '版本信息',
-      5,
+      13,
       `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/version.json`,
       `bili_travail/version.json`
     ),
@@ -225,172 +222,180 @@ function renderVersion(version) {
   ].join('\n');
 }
 
-/**
- * 渲染单个配置项表格行
- */
+/** 渲染单个配置项表格行 */
 function renderConfigRow(item) {
   const extra = CONFIG_EXTRA_DESCRIPTIONS[item.key];
   const desc = extra || item.comment || '—';
   return `| \`${item.key}\` | \`${item.defaultRaw}\` | ${desc} |`;
 }
 
-/**
- * 配置文件说明（由 libs/config.py 自动生成，按控制面板标签页分类）
- *
- * 配置项依据 scripts/doc-definitions.mjs 中的 CONFIG_TABS 分组到对应标签页下；
- * 未映射到任何标签页的配置项会被归入末尾的「其他配置」以防遗漏。
- */
-function renderConfig(items) {
-  const lines = [
-    frontmatter(
-      '配置文件',
-      6,
-      `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/libs/config.py`,
-      `bili_travail/libs/config.py`
-    ),
-    '配置文件 `config.toml` 位于程序目录下，首次运行自动生成，缺省项会在启动时自动补齐。',
-    '',
-    '以下配置项按控制面板的标签页分组展示。',
-    '',
-  ];
-
-  // 按标签页分组
-  const tabGroups = CONFIG_TABS.map((tab) => ({ label: tab.label, items: [] }));
-  const leftovers = [];
-  for (const item of items) {
-    const tab = CONFIG_TABS.find((t) => t.items.includes(item.key));
-    if (tab) {
-      const group = tabGroups.find((g) => g.label === tab.label);
-      group.items.push(item);
-    } else {
-      leftovers.push(item);
-    }
+/** 按给定 key 列表取配置项子集（保持标签页声明顺序），返回渲染行数组 */
+function renderConfigRows(items, keys) {
+  const rows = [];
+  for (const key of keys) {
+    const item = items.find((it) => it.key === key);
+    if (item) rows.push(renderConfigRow(item));
   }
-
-  for (const group of tabGroups) {
-    if (!group.items.length) continue; // 无配置项的标签页（统计相关/模拟测试）不渲染
-    lines.push(`## ${group.label}`);
-    lines.push('');
-    lines.push('| 配置项 | 默认值 | 说明 |');
-    lines.push('| ------ | ------ | ---- |');
-    for (const item of group.items) {
-      lines.push(renderConfigRow(item));
-    }
-    lines.push('');
-  }
-
-  // 兜底：未映射的配置项
-  if (leftovers.length) {
-    lines.push('## 其他配置');
-    lines.push('');
-    lines.push('| 配置项 | 默认值 | 说明 |');
-    lines.push('| ------ | ------ | ---- |');
-    for (const item of leftovers) {
-      lines.push(renderConfigRow(item));
-    }
-    lines.push('');
-  }
-
-  return lines.join('\n');
+  return rows;
 }
 
-/** 通用控件列表渲染 */
-function renderControls(labels, descriptions, order, sectionTitle) {
-  const lines = [`## ${sectionTitle}`, ''];
+/** 全部已映射到标签页的配置项 key（用于检测是否有多余项） */
+const MAPPED_CONFIG_KEYS = CONTROL_TABS.flatMap((t) => t.config);
 
+/** 渲染控件列表（按 order 排序，未收录的追加到末尾并标注自动识别） */
+function renderControlList(labels, descriptions, order) {
   const ordered = [];
   for (const name of order) {
-    if (labels.includes(name)) ordered.push(name);
+    if (labels.includes(name) && !ordered.includes(name)) ordered.push(name);
   }
   for (const name of labels) {
     if (!ordered.includes(name)) ordered.push(name);
   }
-
-  for (const name of ordered) {
+  return ordered.map((name) => {
     const desc = descriptions[name];
-    if (desc) {
-      lines.push(`- **${name}**：${desc}`);
-    } else {
-      lines.push(`- **${name}**：*（自动识别的新控件，待补充说明）*`);
-    }
-  }
-  lines.push('');
-  return lines.join('\n');
+    return desc
+      ? `- **${name}**：${desc}`
+      : `- **${name}**：*（自动识别的新控件，待补充说明）*`;
+  });
 }
 
-/** 按钮页 */
-function renderButton(buttonLabels, colorLabels) {
-  const lines = [
-    frontmatter(
-      '按钮',
-      2,
-      `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/main.py`,
-      `bili_travail/main.py`
-    ),
-  ];
-  lines.push(renderControls(buttonLabels, BUTTON_DESCRIPTIONS, BUTTON_ORDER, '按钮'));
-
-  // 颜色设置
-  const colorNames = colorLabels.length ? colorLabels : ['计时颜色', '按钮颜色', '文字颜色', '背景颜色'];
-  lines.push('### 颜色设置');
-  lines.push('');
+/** 渲染颜色设置列表 */
+function renderColorList(colorLabels, order) {
   const colorTargets = {
     '计时颜色': '倒计时数字的颜色',
     '按钮颜色': '界面按钮的颜色',
-    '文字颜色': '界面文字的颜色',
     '背景颜色': '界面背景的颜色',
+    '主界面字体颜色': '主界面字体颜色',
+    '子页面字体颜色': '子页面字体颜色',
   };
-  for (const c of colorNames) {
-    lines.push(`- **${c}**：自定义${colorTargets[c] || `${c}颜色`}`);
+  const ordered = [];
+  for (const c of order) {
+    if (colorLabels.includes(c) && !ordered.includes(c)) ordered.push(c);
   }
-  lines.push('');
-  return lines.join('\n');
+  for (const c of colorLabels) {
+    if (!ordered.includes(c)) ordered.push(c);
+  }
+  return ordered.map((c) => `- **${c}**：自定义${colorTargets[c] || `${c}颜色`}`);
 }
 
-/** 开关页 */
-function renderSwitch(switchLabels) {
+/**
+ * 渲染单个标签页文档。
+ * 将配置项 / 开关 / 按钮 / 颜色 / 玩法集中到同一页面，与程序界面标签页一致。
+ */
+function renderTab(tab, configItems, switchLabels, buttonLabels, colorLabels, playLabels) {
   const lines = [
     frontmatter(
-      '开关',
-      3,
+      tab.label,
+      tab.order,
       `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/main.py`,
       `bili_travail/main.py`
     ),
-  ];
-  lines.push(renderControls(switchLabels, SWITCH_DESCRIPTIONS, SWITCH_ORDER, '开关'));
-  lines.push(SWITCH_NOTES);
-  lines.push('');
-  return lines.join('\n');
-}
-
-/** 玩法页 */
-function renderPlay(playLabels) {
-  const lines = [
-    frontmatter(
-      '玩法',
-      4,
-      `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/main.py`,
-      `bili_travail/main.py`
-    ),
-    '### 倒计时（倒计时所有单位都是秒）',
+    `### 概述`,
+    '',
+    tab.intro,
     '',
   ];
-  for (const name of PLAY_ORDER) {
-    if (playLabels.includes(name)) {
-      lines.push(`- **${name}**：${PLAY_DESCRIPTIONS[name]}`);
-    }
+
+  // 配置项
+  const configRows = renderConfigRows(configItems, tab.config);
+  if (configRows.length) {
+    lines.push('## 配置项');
+    lines.push('');
+    lines.push('| 配置项 | 默认值 | 说明 |');
+    lines.push('| ------ | ------ | ---- |');
+    lines.push(...configRows);
+    lines.push('');
   }
-  // 未在描述库中但有定义的新玩法
-  for (const name of playLabels) {
-    if (!PLAY_ORDER.includes(name)) {
-      lines.push(`- **${name}**：*（自动识别的新玩法，待补充说明）*`);
-    }
+
+  // 开关
+  if (tab.switches.length) {
+    lines.push('## 开关');
+    lines.push('');
+    lines.push(...renderControlList(tab.switches, SWITCH_DESCRIPTIONS, SWITCH_ORDER));
+    lines.push('');
   }
+
+  // 按钮
+  if (tab.buttons.length) {
+    lines.push('## 按钮');
+    lines.push('');
+    lines.push(...renderControlList(tab.buttons, BUTTON_DESCRIPTIONS, BUTTON_ORDER));
+    lines.push('');
+  }
+
+  // 颜色
+  if (tab.colors.length) {
+    lines.push('## 颜色设置');
+    lines.push('');
+    lines.push(...renderColorList(tab.colors, tab.colors));
+    lines.push('');
+  }
+
+  // 玩法
+  if (tab.plays.length) {
+    lines.push('## 玩法');
+    lines.push('');
+    lines.push(...renderControlList(tab.plays, PLAY_DESCRIPTIONS, tab.plays));
+    lines.push('');
+  }
+
+  // 附加说明
+  if (tab.notes) {
+    lines.push(tab.notes);
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+/** 兜底：未映射到任何标签页的配置项（防遗漏） */
+function renderConfigLeftovers(items) {
+  const leftover = items.filter((it) => !MAPPED_CONFIG_KEYS.includes(it.key));
+  if (!leftover.length) return '';
+  const lines = [
+    frontmatter(
+      '其他配置',
+      14,
+      `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/libs/config.py`,
+      `bili_travail/libs/config.py`
+    ),
+    '以下配置项尚未映射到任何控制面板标签页，属自动识别的新增项，待维护者补充。',
+    '',
+    '| 配置项 | 默认值 | 说明 |',
+    '| ------ | ------ | ---- |',
+  ];
+  for (const item of leftover) lines.push(renderConfigRow(item));
+  lines.push('');
+  return lines.join('\n');
+}
+
+/** 主界面页：倒计时控制按钮 + 悬浮按钮 */
+function renderMain(configItems, buttonLabels, playLabels) {
+  const lines = [
+    frontmatter(
+      MAIN_PAGE.label,
+      MAIN_PAGE.order,
+      `https://github.com/Nya-WSL/bili_travail/blob/${UPSTREAM_BRANCH}/main.py`,
+      `bili_travail/main.py`
+    ),
+    `### 概述`,
+    '',
+    MAIN_PAGE.intro,
+    '',
+  ];
+
+  lines.push('## 按钮');
+  lines.push('');
+  lines.push(...renderControlList(MAIN_PAGE.buttons, BUTTON_DESCRIPTIONS, BUTTON_ORDER));
   lines.push('');
 
-  // 附加玩法说明（随机权重 / 盲盒等）
-  lines.push(PLAY_NOTES);
-  lines.push('');
+  if (MAIN_PAGE.fab.length) {
+    lines.push('### 悬浮按钮');
+    lines.push('');
+    lines.push(...renderControlList(MAIN_PAGE.fab, BUTTON_DESCRIPTIONS, MAIN_PAGE.fab));
+    lines.push('');
+  }
+
   return lines.join('\n');
 }
 
@@ -450,12 +455,8 @@ function main() {
   writeFileSync(DOC_TARGETS.version, renderVersion(version), 'utf8');
   log(`版本信息已写入（${version}）`);
 
-  // 2. config
+  // 2. 提取控件
   const configItems = extractConfigItems(configSrc);
-  writeFileSync(DOC_TARGETS.config, renderConfig(configItems), 'utf8');
-  log(`配置文件说明已写入（${configItems.length} 个配置项）`);
-
-  // 3. button / switch / play
   const buttonLabels = extractUiLabels(mainSrc, 'button');
   const switchLabels = extractUiLabels(mainSrc, 'switch');
   const colorLabels = extractColorInputs(mainSrc);
@@ -474,11 +475,26 @@ function main() {
     }
   }
 
-  writeFileSync(DOC_TARGETS.button, renderButton(buttonLabels, colorLabels), 'utf8');
-  writeFileSync(DOC_TARGETS.switch, renderSwitch(switchLabels), 'utf8');
-  writeFileSync(DOC_TARGETS.play, renderPlay(playLabels), 'utf8');
+  // 3. 主界面
+  writeFileSync(DOC_TARGETS.main, renderMain(configItems, buttonLabels, playLabels), 'utf8');
+  log(`主界面已写入`);
+
+  // 4. 各标签页
+  for (const tab of CONTROL_TABS) {
+    const key = tab.filename.replace('.md', '');
+    writeFileSync(DOC_TARGETS[key], renderTab(tab, configItems, switchLabels, buttonLabels, colorLabels, playLabels), 'utf8');
+    log(`标签页「${tab.label}」已写入（${tab.filename}）`);
+  }
+
+  // 5. 兜底配置项
+  const leftoverMd = renderConfigLeftovers(configItems);
+  if (leftoverMd) {
+    writeFileSync(DOC_TARGETS['other-config'], leftoverMd, 'utf8');
+    log('存在未映射配置项，已生成「其他配置」页面');
+  }
+
   log(
-    `控件说明已写入（按钮 ${buttonLabels.length}，开关 ${switchLabels.length}，玩法 ${playLabels.length}，颜色 ${colorLabels.length}）`
+    `控件提取：按钮 ${buttonLabels.length}，开关 ${switchLabels.length}，玩法 ${playLabels.length}，颜色 ${colorLabels.length}，配置项 ${configItems.length}`
   );
 
   // 输出本次生成的变更摘要（对比已提交版本），便于 CI 日志观察

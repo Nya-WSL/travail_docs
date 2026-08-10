@@ -163,45 +163,108 @@ export const CONFIG_EXTRA_DESCRIPTIONS = {
 };
 
 // ---------------------------------------------------------------------------
-// 配置项 -> 控制面板标签页 分组（按 main.py 中 ui.tabs 的标签页顺序）
-// 每个标签页列出其中可配置项；不含配置项的标签页（如统计相关/模拟测试）不渲染
+// 控制面板 -> 标签页 分组（按 main.py 中 ui.tabs 的标签页顺序）
+//
+// 每个标签页同时收录其中的：配置项(config)、开关(switches)、按钮(buttons)、
+// 颜色(color)、玩法(plays)，以及附加说明(notes)。
+// 文档按标签页生成一个独立页面，字段 filename 指定输出文件名，order 指定侧边栏顺序。
+//
+// 维护说明：
+//  - 上游新增控件时，脚本会把未收录的标签追加到对应分类的文档末尾并标注
+//    「自动识别的新控件」，提示维护者在此补充正式描述。
+//  - 若某控件未出现在任何标签页，会兜底归入「主界面/其他」以防遗漏。
 // ---------------------------------------------------------------------------
-export const CONFIG_TABS = [
+
+// 主界面：标签页上方的倒计时控制区 + 悬浮按钮
+// （悬浮按钮使用图标无文字，不会从源码提取，直接在此固定说明）
+export const MAIN_PAGE = {
+  label: '主界面',
+  order: 3,
+  filename: 'main.md',
+  intro: '倒计时相关操作按钮位于控制面板顶部（标签页之外）。',
+  buttons: ['开始', '暂停', '继续', '停止', '增加', '减少', '保存', '读取'],
+  fab: ['提交工单', '查看工单'],
+};
+
+export const CONTROL_TABS = [
   {
     label: '账号设置',
-    items: ['room_id', 'host', 'port', 'auth_code', 'exit_timer', 'exit_time'],
+    order: 4,
+    filename: 'account.md',
+    intro: '房间号、身份码、弹幕服务器连接与倒计时结束后行为等账号相关设置。',
+    config: ['room_id', 'host', 'port', 'auth_code', 'exit_timer', 'exit_time'],
+    switches: ['连接至弹幕服务器', '忽略倒计时', '倒计时结束后断开连接'],
+    buttons: [],
+    colors: [],
+    plays: [],
+    notes: SWITCH_NOTES,
   },
   {
     label: '礼物设置',
-    items: ['short_list', 'short_time'],
+    order: 5,
+    filename: 'gift.md',
+    intro: '设置自定义礼物的玩法规则，以及更新礼物数据。',
+    config: ['short_list', 'short_time'],
+    switches: [],
+    buttons: ['设置礼物', '更新礼物'],
+    colors: [],
+    plays: ['加时', '减时', '加倍', '减半', '清空', '随机'],
+    notes: PLAY_NOTES,
   },
   {
     label: '显示设置',
-    items: [
+    order: 6,
+    filename: 'display.md',
+    intro: 'OBS 浏览器源中倒计时与礼物列表的显示相关设置。',
+    config: [
       'show_capture_gift_list',
       'show_capture_rank_list',
       'borderless_cd',
       'capture_gift_list_number',
     ],
+    switches: ['OBS显示排行榜', 'OBS显示投喂记录', '无边框倒计时'],
+    buttons: [],
+    colors: [],
+    plays: [],
+    notes: '',
   },
   {
     label: '外观设置',
-    items: [
+    order: 7,
+    filename: 'appearance.md',
+    intro: '界面配色与背景等外观相关设置。',
+    config: [
       'background_image',
       'time_color',
       'btn_color',
-      'bg_color',
       'main_text_color',
       'text_color',
+      'bg_color',
     ],
+    switches: [],
+    buttons: [],
+    colors: ['计时颜色', '按钮颜色', '背景颜色', '主界面字体颜色', '子页面字体颜色'],
+    plays: [],
+    notes: '',
   },
   {
     label: '统计相关',
-    items: [],
+    order: 8,
+    filename: 'statistics.md',
+    intro: '查看加班姬运行期间的礼物/盲盒盈亏统计。',
+    config: [],
+    switches: [],
+    buttons: ['盲盒盈亏', '礼物统计'],
+    colors: [],
+    plays: [],
+    notes: '',
   },
   {
     label: '程序设置',
-    items: [
+    order: 9,
+    filename: 'program.md',
+    intro: '账号鉴权、更新检查、API 服务器等程序相关设置。',
+    config: [
       'server',
       'ACCESS_KEY_ID',
       'ACCESS_KEY_SECRET',
@@ -210,10 +273,23 @@ export const CONFIG_TABS = [
       'check_update',
       'check_sha256',
     ],
+    switches: ['自动检查更新'],
+    buttons: ['登录账号', '检查更新', '更新日志', '上传日志'],
+    colors: [],
+    plays: [],
+    notes: '',
   },
   {
     label: '模拟测试',
-    items: [],
+    order: 10,
+    filename: 'simulation.md',
+    intro: '离线测试礼物玩法效果。',
+    config: [],
+    switches: [],
+    buttons: ['发送模拟礼物'],
+    colors: [],
+    plays: [],
+    notes: '',
   },
 ];
 

@@ -1,7 +1,7 @@
 ---
 title: 常见问题
 sidebar:
-  order: 3
+  order: 11
 ---
 
 ### 是否支持其他（直播/系统）平台

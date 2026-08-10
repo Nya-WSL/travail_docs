@@ -10,14 +10,12 @@ B站加班姬（[bili_travail](https://github.com/Nya-WSL/bili_travail)）使用
 |------|---------|---------|
 | 更新日志 | `changelog.json` | 按版本列出更新内容 |
 | 版本信息 | `version.json` | 当前版本号 |
-| 配置文件 | `libs/config.py` | 配置项、默认值、说明 |
-| 按钮 | `main.py`（`ui.button`） | 控制面板与弹窗按钮 |
-| 开关 | `main.py`（`ui.switch`） | 控制面板开关 |
-| 玩法 | `main.py`（`ui.toggle`） | 礼物玩法类型 |
+| 主界面 | `main.py`（`ui.button`） | 倒计时控制按钮、悬浮按钮 |
+| 控制面板各标签页 | `main.py` + `libs/config.py` | 按标签页（账号/礼物/显示/外观/统计/程序/模拟）集中展示配置项、开关、按钮、颜色、玩法 |
 
 > 生成规则：解析上游源码中的 `ui.button` / `ui.switch` / `ui.color_input` / `ui.toggle` 与
-> `libs/config.py` 配置定义，结合 `scripts/doc-definitions.mjs` 中的功能描述映射，
-> 自动生成对应 Markdown 文档；上游新增控件时脚本会自动识别并追加，
+> `libs/config.py` 配置定义，结合 `scripts/doc-definitions.mjs` 中的 `CONTROL_TABS` 标签页映射与功能描述映射，
+> 按控制面板标签页生成对应 Markdown 文档；上游新增控件时脚本会自动识别并追加，
 > 若缺少描述会标注「待补充说明」，提示维护者更新描述库。
 
 ### 触发方式
@@ -63,11 +61,11 @@ npm run build      # 构建生产站点到 ./dist/
 ├── .cnb.yml                      # CNB 流水线（git-sync + 文档自动同步）
 ├── scripts/
 │   ├── update-docs.mjs           # 文档生成脚本（拉取上游源码并生成文档）
-│   └── doc-definitions.mjs       # 控件功能描述库（按钮/开关/玩法/配置说明）
+│   └── doc-definitions.mjs       # 控件功能描述库（标签页映射/按钮/开关/玩法/配置说明）
 ├── docs/templates/
 │   └── github-sync-docs.yml      # GitHub Actions 实时触发模板
 └── src/content/docs/
-    ├── guides/                   # 指南（概述 / 初次运行 / 玩法 / FAQ / 更新日志...）
+    ├── guides/                   # 指南（概述 / 主界面 / 各标签页 / FAQ / 更新日志...）
     ├── contact.md
     ├── index.mdx
     └── thanks.mdx
