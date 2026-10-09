@@ -53,6 +53,7 @@ const DOC_TARGETS = {
   changelog: join(DOCS_DIR, 'changelog.md'),
   version: join(DOCS_DIR, 'version.md'),
   main: join(DOCS_DIR, 'main.md'),
+  otherConfig: join(DOCS_DIR, 'other-config.md'),
   ...Object.fromEntries(CONTROL_TABS.map((t) => [t.filename.replace('.md', ''), join(DOCS_DIR, t.filename)])),
 };
 
@@ -489,7 +490,7 @@ function main() {
   // 5. 兜底配置项
   const leftoverMd = renderConfigLeftovers(configItems);
   if (leftoverMd) {
-    writeFileSync(DOC_TARGETS['other-config'], leftoverMd, 'utf8');
+    writeFileSync(DOC_TARGETS.otherConfig, leftoverMd, 'utf8');
     log('存在未映射配置项，已生成「其他配置」页面');
   }
 
