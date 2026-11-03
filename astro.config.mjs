@@ -34,7 +34,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: '指南',
-					autogenerate: { directory: 'guides' }
+					items: [{ autogenerate: { directory: 'guides' } }]
 				},
 				{
 					label: '关于',
